@@ -1,5 +1,4 @@
 const crypto = require("crypto");
-const { v4: uuid } = require("uuid");
 const { Router } = require("express");
 const jwt = require("jsonwebtoken");
 const { User, Post } = require("../Tables");

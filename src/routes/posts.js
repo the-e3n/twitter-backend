@@ -1,6 +1,5 @@
 const { ObjectId } = require("mongodb");
 const { Router } = require("express");
-const fs = require("fs");
 const { Post, User } = require("../Tables");
 
 module.exports = async ({ app, db, project_root, upload, verifyToken }) => {
