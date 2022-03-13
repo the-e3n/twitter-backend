@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 const { Router } = require("express");
 const { Post, User } = require("../Tables");
 
-module.exports = async ({ app, db, project_root, upload, verifyToken }) => {
+module.exports = async ({ db, verifyToken }) => {
   const router = Router();
   router.get("/", verifyToken, async (req, res) => {
     let posts = await db.find({

@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const { User, Post } = require("../Tables");
 const { ObjectId } = require("mongodb");
 
-module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
+module.exports = async ({ db, verifyToken }) => {
   const router = Router();
   router.get("/", async (req, res) => {
     let data = await db.find({
@@ -32,7 +32,13 @@ module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
         },
       },
     });
-    res.json(data || {});
+    let posts = await db.find({
+      coll: Post,
+      filter: { "user._id": ObjectId(id) },
+      options: {},
+    });
+
+    res.json({ ...(data || {}), posts });
   });
   router.post("/update/:id", async (req, res) => {
     const { id } = req.params || {};
@@ -186,8 +192,7 @@ module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
     }
   });
   router.post("/register", async (req, res) => {
-    const { name, email, password1, password2, dob, phone } = req.body || {};
-    console.log(name, email, password1, password2, dob, phone);
+    const { name, email, password1, password2, dob } = req.body || {};
     if (!email) {
       res.json({ status: "error", message: "No email Provided" });
     } else if (!password1 || !password2) {
@@ -221,6 +226,7 @@ module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
             password: passHash,
             createdOn: new Date().toJSON(),
             updatedOn: new Date().toJSON(),
+            dob: dob,
             followers: [],
             following: [],
           },
@@ -240,7 +246,6 @@ module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
 
   router.post("/login", async (req, res) => {
     const { email = "", password = "" } = req.body || {};
-    console.log(email, password);
     let user = await db.findOne({
       coll: User,
       filter: { email: email },
@@ -258,14 +263,12 @@ module.exports = async ({ app, db, mailer, upload, verifyToken }) => {
         message: "Password Must be at least 8 character long",
       });
     } else if (!user) {
-      console.log(user);
       res.json({
         status: "error",
         message: "Invalid Email",
       });
     } else {
       let passHash = crypto.createHash("sha256").update(password).digest("hex");
-      console.log(passHash, user.password);
       if (user.password === passHash) {
         const { name, email, dob, verified, phone, _id } = user;
         let token = jwt.sign(
